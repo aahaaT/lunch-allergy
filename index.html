@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사당중학교 급식 메뉴 🍚</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg: #090d13;
+    --card-bg: #121820;
+    --card-border: #222d3d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #f97316;
+    --accent-glow: rgba(249, 115, 22, 0.35);
+    --today-bg: #ffffff;
+    --today-text: #0f141c;
+    --danger: #ef4444;
+    --danger-bg: rgba(239, 68, 68, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 450px at 50% -50px, rgba(249, 115, 22, 0.15), transparent 70%),
+      var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+    padding: 28px 16px 56px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* 헤더 */
+  header { text-align: center; margin-bottom: 24px; }
+  .badge-school {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(249, 115, 22, 0.12);
+    border: 1px solid rgba(249, 115, 22, 0.35);
+    color: #ffaa5a;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: clamp(26px, 5.5vw, 36px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  h1 .emoji { display: inline-block; animation: bounce 2.4s ease-in-out infinite; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  .subtitle { color: var(--muted); font-size: 14.5px; }
+
+  /* 주간 이동 네비게이션 */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 8px 12px;
+    margin-bottom: 18px;
+    gap: 8px;
+  }
+  .nav-btn {
+    background: #1c2430;
+    border: 1px solid #2e3a4e;
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav-btn:hover:not(:disabled) {
+    background: #253142;
+    border-color: var(--accent);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .week-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: clamp(14px, 3.5vw, 16px);
+  }
+  .week-title small {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* 알레르기 필터 바 */
+  .allergen-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+  }
+  .allergen-box summary {
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #ffaa5a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+  }
+  .allergen-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed #222d3d;
+  }
+  .chip {
+    background: #18202c;
+    border: 1px solid #283548;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .chip:hover { border-color: var(--accent); color: #fff; }
+  .chip.active {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: #fca5a5;
+    font-weight: 700;
+  }
+
+  /* 급식 표 컨테이너 */
+  .table-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 8px;
+    overflow-x: auto;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 6px;
+    min-width: 680px;
+  }
+  thead th {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 12px;
+  }
+
+  /* 테이블 셀 기본 (검정 배경 - AGENTS.md 사양) */
+  tbody td {
+    background: #000000;
+    color: #d7dde3;
+    border: 1px solid #1a222d;
+    border-radius: 12px;
+    padding: 16px 14px;
+    font-size: 14px;
+    line-height: 1.8;
+    vertical-align: top;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  tbody td:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  }
+
+  /* 오늘 셀 (하얀 배경 - AGENTS.md 사양 필수 조건) */
+  tbody td.today {
+    background: var(--today-bg) !important;
+    color: var(--today-text) !important;
+    border-color: #ffd8a8 !important;
+    box-shadow: 0 0 0 2.5px rgba(249, 115, 22, 0.7), 0 12px 32px rgba(249, 115, 22, 0.25) !important;
+  }
+
+  td .day-badge {
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  td.today .day-badge { color: var(--accent); }
+  td .date-sub {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  td.today .date-sub { color: #64748b; font-weight: 500; }
+
+  td .today-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    margin-top: 4px;
+  }
+
+  /* 메뉴 리스트 */
+  .menu-list { list-style: none; }
+  .menu-item {
+    font-size: 13.5px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .menu-name { font-weight: 500; }
+  .allergen-tags {
+    font-size: 11px;
+    color: #64748b;
+  }
+  td.today .allergen-tags { color: #94a3b8; }
+
+  /* 알레르기 경고 표시 */
+  .menu-item.warning .menu-name {
+    color: #ef4444 !important;
+    font-weight: 700;
+    text-decoration: underline wavy #ef4444;
+  }
+  .warn-badge {
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* 칼로리 및 사진 버튼 */
+  .cell-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .kcal-txt {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffaa5a;
+  }
+  td.today .kcal-txt { color: #ea580c; }
+
+  .photo-btn {
+    background: #1c2430;
+    border: 1px solid #2e3a4e;
+    color: #93c5fd;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+  }
+  .photo-btn:hover {
+    background: #253347;
+    border-color: #60a5fa;
+    color: #fff;
+  }
+  td.today .photo-btn {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0369a1;
+  }
+  td.today .photo-btn:hover { background: #e2e8f0; }
+
+  /* 휴일 안내 */
+  .off-box {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 12px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  td.today .off-box { color: #475569; font-weight: 600; }
+
+  /* 이미지 모달 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    max-width: 540px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+  }
+  .modal-overlay.show .modal-content { transform: scale(1); }
+  .modal-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .modal-header h3 { font-size: 15px; font-weight: 700; color: #fff; }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .modal-close:hover { color: #fff; }
+  .modal-body {
+    padding: 12px;
+    text-align: center;
+  }
+  .modal-body img {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 12px;
+    display: block;
+    margin: 0 auto;
+    object-fit: cover;
+  }
+  .modal-caption {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 0 6px 6px;
+  }
+
+  /* 푸터 */
+  footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer a { color: #ffaa5a; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    body { padding: 18px 10px 40px; }
+    tbody td { padding: 12px 10px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge-school">🏫 서울 동작구 · 공립</div>
+      <h1><span class="emoji">🍚</span> 사당중학교 급식 메뉴</h1>
+      <p class="subtitle" id="dataStatus">나이스(NEIS) 공개 API에서 이번 주 식단을 불러오는 중입니다.</p>
+    </header>
+
+    <!-- 주간 이동 탭 -->
+    <div class="week-nav">
+      <button class="nav-btn" id="prevWeekBtn" onclick="changeWeek(-1)">◀ 지난주</button>
+      <div class="week-title">
+        <span id="weekLabelTitle">2026년 9월 4주차</span>
+        <small id="weekDateRange">9월 21일 ~ 9월 25일</small>
+      </div>
+      <button class="nav-btn" id="nextWeekBtn" onclick="changeWeek(1)">다음주 ▶</button>
+    </div>
+
+    <!-- 알레르기 필터 -->
+    <details class="allergen-box" id="allergenBox">
+      <summary>
+        <span>⚠️ 내 알레르기 유발 식품 체크 (메뉴 강조 표시)</span>
+        <small id="allergenSummary" style="color:var(--muted); font-size:12px;">선택 안 됨 ▾</small>
+      </summary>
+      <div class="allergen-chips" id="allergenChips"></div>
+    </details>
+
+    <!-- 급식 표 (다크테마 + 오늘 흰색 배경) -->
+    <main class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:115px">요일</th>
+            <th>식단 메뉴</th>
+            <th style="width:130px">칼로리 · 사진</th>
+          </tr>
+        </thead>
+        <tbody id="menuBody"></tbody>
+      </table>
+    </main>
+
+    <footer>
+      출처: <a href="https://sadang.sen.ms.kr/70242/subMenu.do" target="_blank" rel="noopener">사당중학교 공식 홈페이지(NEIS 연동)</a> · 동작관악교육지원청
+    </footer>
+  </div>
+
+  <!-- 급식 사진 모달 -->
+  <div class="modal-overlay" id="photoModal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modalTitle">급식 실물 사진</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImg" src="" alt="식단 사진" />
+        <div class="modal-caption" id="modalCaption"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ── 사당중학교 공식 실제 급식 데이터 (3주치 전체) ───────────────────
+  const FALLBACK_WEEKS = [
+    {
+      id: "prev",
+      label: "2026년 9월 3주차",
+      range: "9월 14일 (월) ~ 9월 18일 (금)",
+      days: [
+        {
+          date: "2026-09-14",
+          dayName: "월요일",
+          menu: ["현미밥", "배추콩가루국(5.6)", "오향장육(5.6.9.10.13)", "상추/쌈장(5.6.13)", "비빔막국수(3.4.5.6.13.16)", "포기김치(9)", "푸딩(샤인머스캣맛)"],
+          kcal: "952 kcal",
+          img: "https://sadang.sen.ms.kr/dggb/module/file/selectImageView.do?atchFileId=4101986&fileSn=0"
+        },
+        {
+          date: "2026-09-15",
+          dayName: "화요일",
+          menu: ["차조현미밥", "쇠고기무국(5.6.16)", "임연수살구이(5.6)", "떡갈비파스타조림(1.2.5.6.10.12.13.15.16)", "포기김치(9)", "만다린샐러드&소스(13)"],
+          kcal: "884 kcal",
+          img: "https://sadang.sen.ms.kr/dggb/module/file/selectImageView.do?atchFileId=4101984&fileSn=0"
+        },
+        {
+          date: "2026-09-16",
+          dayName: "수요일",
+          menu: ["지코바치밥(5.6.12.13.15.18)", "유부쑥갓국(1.5.6)", "포테이토치즈스틱(5.6.12)", "콩나물무침(5)", "깍두기(9)", "꿀자몽블랙티(13)"],
+          kcal: "953 kcal",
+          img: "https://sadang.sen.ms.kr/dggb/module/file/selectImageView.do?atchFileId=4101983&fileSn=0"
+        },
+        {
+          date: "2026-09-17",
+          dayName: "목요일",
+          menu: ["기장현미밥", "참치김치찌개(5.9)", "수제돈까스(1.2.5.6.10)", "&브라운소스(1.2.5.6.12.13.16)", "새송이굴소스볶음(5.6.13.18)", "총각김치(알타리)(9)", "하와이안샐러드(13)"],
+          kcal: "785 kcal",
+          img: "https://sadang.sen.ms.kr/dggb/module/file/selectImageView.do?atchFileId=4103840&fileSn=0"
+        },
+        {
+          date: "2026-09-18",
+          dayName: "금요일",
+          menu: ["유부초밥(1.2.5.6.9.13.16.18)", "냉우동(1.3.5.6.7.9.18)", "플라워왕새우튀김&칠리소스(1.5.6.9.12.13)", "치커리사과유자청무침(13)", "깍두기(9)", "하루요거트(딸기맛)(2)"],
+          kcal: "965 kcal",
+          img: "https://sadang.sen.ms.kr/dggb/module/file/selectImageView.do?atchFileId=4105622&fileSn=0"
+        }
+      ]
+    },
+    {
+      id: "current",
+      label: "2026년 9월 4주차 (이번주)",
+      range: "9월 21일 (월) ~ 9월 25일 (금)",
+      days: [
+        {
+          date: "2026-09-21",
+          dayName: "월요일",
+          menu: ["보리현미밥", "어묵국(1.5.6)", "닭볶음탕(5.6.13.15)", "잡채(5.6.10.13)", "포기김치(9)", "우베바스크치즈케이크(1.2.5.6)"],
+          kcal: "941 kcal",
+          img: "https://sadang.sen.ms.kr/dggb/module/file/selectImageView.do?atchFileId=4107564&fileSn=0"
+        },
+        {
+          date: "2026-09-22",
+          dayName: "화요일",
+          menu: ["수수현미밥", "육개장(1.5.6.16)", "수제탕수육&후르츠소스(1.5.6.10.11.12.13)", "호박느타리볶음(5.9)", "포기김치(9)", "바나나(절반)"],
+          kcal: "712 kcal",
+          img: null
+        },
+        {
+          date: "2026-09-23",
+          dayName: "수요일",
+          menu: ["나물비빔밥/(쇠고기)볶음고추장(5.6.13.16)", "미역장국(5.6)", "우리쌀피자크레페(1.5.6.10)", "계란후라이(1.5)", "깍두기(9)", "송편&식혜(5)"],
+          kcal: "790 kcal",
+          img: null
+        },
+        {
+          date: "2026-09-24",
+          dayName: "목요일",
+          menu: [],
+          kcal: "—",
+          img: null,
+          off: "추석 연휴 · 급식 없음 🎑"
+        },
+        {
+          date: "2026-09-25",
+          dayName: "금요일",
+          menu: [],
+          kcal: "—",
+          img: null,
+          off: "추석 연휴 · 급식 없음 🎑"
+        }
+      ]
+    },
+    {
+      id: "next",
+      label: "2026년 9월 5주차 (다음주)",
+      range: "9월 28일 (월) ~ 9월 30일 (수)",
+      days: [
+        {
+          date: "2026-09-28",
+          dayName: "월요일",
+          menu: ["잡곡현미밥(5)", "감자고추장찌개(5.6.16)", "훈제오리볶음(5.6.13)", "수제무쌈(비트)(13)", "고구마츄러스맛탕(1.2.5.6.13)", "부추겉절이(13)", "포기김치(9)"],
+          kcal: "956 kcal",
+          img: null
+        },
+        {
+          date: "2026-09-29",
+          dayName: "화요일",
+          menu: ["기장현미밥", "순대국(2.5.6.9.10.13.16)", "코다리살떡강정(1.4.5.6.10.12.13.15)", "삼색채소찜(5.6.13)", "포기김치(9)", "멜론"],
+          kcal: "947 kcal",
+          img: null
+        },
+        {
+          date: "2026-09-30",
+          dayName: "수요일",
+          menu: ["로제스파게티(1.2.5.6.10.12.13.16)", "콘마요도그(1.2.5.6.10.15.16.18)", "토마토어린잎치즈샐러드&발사믹(1.2.5.6.12)", "깍두기(9)", "쁘띠쿨파인(2)"],
+          kcal: "950 kcal",
+          img: null
+        }
+      ]
+    }
+  ];
+
+  // 나이스 교육정보 개방 포털의 사당중학교 식단을 접속 시점에 불러옵니다.
+  const NEIS_ENDPOINT = "https://open.neis.go.kr/hub/mealServiceDietInfo";
+  const SCHOOL = { educationOffice: "B10", code: "7132141" };
+  let WEEKS = [{ id: "loading", label: "급식 정보를 불러오는 중…", range: "나이스 공개 API 연결 중", days: [] }];
+  let currentWeekStart = startOfWeek(new Date());
+  let isLoading = false;
+
+  function startOfWeek(value) {
+    const date = new Date(value);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+    return date;
+  }
+
+  function formatApiDate(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}${mm}${dd}`;
+  }
+
+  function formatRangeDate(date) {
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  }
+
+  function formatWeekLabel(monday) {
+    const weekOfMonth = Math.floor((monday.getDate() - 1) / 7) + 1;
+    return `${monday.getFullYear()}년 ${monday.getMonth() + 1}월 ${weekOfMonth}주차`;
+  }
+
+  function createWeek(monday, rows) {
+    const meals = new Map(rows.filter(row => row.MMEAL_SC_CODE === "2").map(row => [row.MLSV_YMD, row]));
+    const dayNames = ["월요일", "화요일", "수요일", "목요일", "금요일"];
+    const days = dayNames.map((dayName, offset) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + offset);
+      const apiDate = formatApiDate(date);
+      const meal = meals.get(apiDate);
+      const menu = meal
+        ? meal.DDISH_NM.split(/<br\s*\/?\s*>/i).map(item => item.replace(/<[^>]*>/g, "").trim()).filter(Boolean)
+        : [];
+      return {
+        date: `${apiDate.slice(0, 4)}-${apiDate.slice(4, 6)}-${apiDate.slice(6, 8)}`,
+        dayName,
+        menu,
+        kcal: meal?.CAL_INFO || "—",
+        img: null,
+        ...(meal ? {} : { off: "급식 정보가 없습니다." })
+      };
+    });
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+    return {
+      id: formatApiDate(monday),
+      label: formatWeekLabel(monday),
+      range: `${formatRangeDate(monday)} (월) ~ ${formatRangeDate(friday)} (금)`,
+      days
+    };
+  }
+
+  async function loadWeek() {
+    isLoading = true;
+    renderTable();
+    const friday = new Date(currentWeekStart);
+    friday.setDate(currentWeekStart.getDate() + 4);
+    const params = new URLSearchParams({
+      Type: "json",
+      ATPT_OFCDC_SC_CODE: SCHOOL.educationOffice,
+      SD_SCHUL_CODE: SCHOOL.code,
+      MLSV_FROM_YMD: formatApiDate(currentWeekStart),
+      MLSV_TO_YMD: formatApiDate(friday)
+    });
+    try {
+      const response = await fetch(`${NEIS_ENDPOINT}?${params}`);
+      if (!response.ok) throw new Error("급식 정보를 불러오지 못했습니다.");
+      const payload = await response.json();
+      const rows = payload.mealServiceDietInfo?.[1]?.row || [];
+      WEEKS = [createWeek(currentWeekStart, rows)];
+      document.getElementById("dataStatus").textContent = "나이스(NEIS) 공개 API 기반 · 접속 시 자동으로 최신 식단을 조회합니다.";
+    } catch (error) {
+      WEEKS = [createWeek(currentWeekStart, [])];
+      document.getElementById("dataStatus").textContent = "급식 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    } finally {
+      isLoading = false;
+      renderTable();
+    }
+  }
+
+  // 교육부 표준 알레르기 19종
+  const ALLERGEN_MAP = {
+    "1": "난류(계란)", "2": "우유", "3": "메밀", "4": "땅콩", "5": "대두(콩)",
+    "6": "밀", "7": "고등어", "8": "게", "9": "새우", "10": "돼지고기",
+    "11": "복숭아", "12": "토마토", "13": "아황산류", "14": "호두", "15": "닭고기",
+    "16": "쇠고기", "17": "오징어", "18": "조개류", "19": "잣"
+  };
+
+  let currentWeekIdx = 0;
+  let selectedAllergens = new Set(JSON.parse(localStorage.getItem("my-allergens") || "[]"));
+
+  // 오늘 날짜 문자열 (YYYY-MM-DD)
+  const todayStr = (() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  })();
+
+  // 알레르기 칩 렌더링
+  function renderAllergenChips() {
+    const container = document.getElementById("allergenChips");
+    container.innerHTML = "";
+    Object.entries(ALLERGEN_MAP).forEach(([code, name]) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip" + (selectedAllergens.has(code) ? " active" : "");
+      btn.textContent = `${code}. ${name}`;
+      btn.onclick = () => {
+        if (selectedAllergens.has(code)) selectedAllergens.delete(code);
+        else selectedAllergens.add(code);
+        localStorage.setItem("my-allergens", JSON.stringify([...selectedAllergens]));
+        renderAllergenChips();
+        renderTable();
+      };
+      container.appendChild(btn);
+    });
+
+    const summary = document.getElementById("allergenSummary");
+    if (selectedAllergens.size === 0) {
+      summary.textContent = "선택 안 됨 ▾";
+      summary.style.color = "var(--muted)";
+    } else {
+      summary.textContent = `${selectedAllergens.size}개 선택됨 ⚠️`;
+      summary.style.color = "#fca5a5";
+    }
+  }
+
+  // 메뉴 파싱: 요리명 + 알레르기 코드 배열
+  function parseItem(raw) {
+    const m = /^(.*?)(?:\(([\d.]+)\))?$/.exec(raw.trim());
+    const name = m[1] || raw;
+    const codes = m[2] ? m[2].split(".") : [];
+    return { name, codes };
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+    }[c]));
+  }
+
+  // 테이블 렌더링
+  function renderTable() {
+    const week = WEEKS[currentWeekIdx] || WEEKS[0];
+    document.getElementById("weekLabelTitle").textContent = week.label;
+    document.getElementById("weekDateRange").textContent = week.range;
+    document.getElementById("prevWeekBtn").disabled = isLoading;
+    document.getElementById("nextWeekBtn").disabled = isLoading;
+
+    const tbody = document.getElementById("menuBody");
+    tbody.innerHTML = "";
+
+    week.days.forEach(day => {
+      const isToday = day.date === todayStr;
+      const tr = document.createElement("tr");
+
+      // 날짜 / 요일
+      const tdDay = document.createElement("td");
+      tdDay.className = isToday ? "today" : "";
+      const dateParts = day.date.split("-");
+      const dateFmt = `${parseInt(dateParts[1], 10)}월 ${parseInt(dateParts[2], 10)}일`;
+
+      tdDay.innerHTML = `
+        <span class="day-badge">${day.dayName}</span>
+        <span class="date-sub">${dateFmt}</span>
+        ${isToday ? `<span class="today-pill">🍽️ 오늘</span>` : ""}
+      `;
+
+      // 식단 메뉴
+      const tdMenu = document.createElement("td");
+      tdMenu.className = isToday ? "today" : "";
+
+      if (day.off) {
+        tdMenu.innerHTML = `<div class="off-box"><span>🏖️</span><span>${day.off}</span></div>`;
+      } else {
+        const ul = document.createElement("ul");
+        ul.className = "menu-list";
+
+        day.menu.forEach(rawItem => {
+          const { name, codes } = parseItem(rawItem);
+          const hasWarning = codes.some(c => selectedAllergens.has(c));
+
+          const li = document.createElement("li");
+          li.className = "menu-item" + (hasWarning ? " warning" : "");
+
+          const tagText = codes.length ? `(${codes.join(".")})` : "";
+          li.innerHTML = `
+            <span class="menu-name">· ${esc(name)}</span>
+            ${tagText ? `<span class="allergen-tags">${tagText}</span>` : ""}
+            ${hasWarning ? `<span class="warn-badge">주의</span>` : ""}
+          `;
+          ul.appendChild(li);
+        });
+
+        tdMenu.appendChild(ul);
+      }
+
+      // 칼로리 + 사진 버튼
+      const tdMeta = document.createElement("td");
+      tdMeta.className = isToday ? "today" : "";
+
+      const metaWrap = document.createElement("div");
+      metaWrap.className = "cell-meta";
+      metaWrap.innerHTML = `<span class="kcal-txt">${day.kcal}</span>`;
+
+      if (day.img) {
+        const photoBtn = document.createElement("button");
+        photoBtn.type = "button";
+        photoBtn.className = "photo-btn";
+        photoBtn.innerHTML = "📷 실물 사진";
+        photoBtn.onclick = () => openModal(day);
+        metaWrap.appendChild(photoBtn);
+      }
+
+      tdMeta.appendChild(metaWrap);
+
+      tr.appendChild(tdDay);
+      tr.appendChild(tdMenu);
+      tr.appendChild(tdMeta);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function changeWeek(diff) {
+    if (isLoading) return;
+    currentWeekStart.setDate(currentWeekStart.getDate() + (diff * 7));
+    loadWeek();
+  }
+
+  // 모달 제어
+  function openModal(day) {
+    document.getElementById("modalTitle").textContent = `${day.dayName} (${day.date}) 급식 실물 사진`;
+    document.getElementById("modalImg").src = day.img;
+    document.getElementById("modalCaption").textContent = day.menu.map(m => parseItem(m).name).join(" · ");
+    document.getElementById("photoModal").classList.add("show");
+  }
+
+  function closeModal(e) {
+    document.getElementById("photoModal").classList.remove("show");
+    document.getElementById("modalImg").src = "";
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  // 초기 실행
+  renderAllergenChips();
+  loadWeek();
+</script>
+</body>
+</html>
